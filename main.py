@@ -18,6 +18,7 @@ import statsmodels.api as sm
 
 
 '''
+All files located in: /data
 data/
 sch_ver: scherzer, verlander: 36059
 les_bau: lester, bauer: 35129
@@ -35,37 +36,32 @@ bum_ham: bumgarner, hamels: 29527
 ray_lyn: ray, lynn: 28924
 gau_gra: gausman, gray: 28018
 
-
 testing data/kershaw_actual
 '''
 
 du.get_current_time('start')
 
+## Use this array if planning to run for multiple pitchers
 pitcher_data_list = ['sch_ver', 'les_bau', 'col_gre', 'por_deg',
                     'qui_ker', 'arr_hen', 'teh_sal', 'keu_gib',
                     'roa_hap', 'fie_odo','arc_gon', 'tan_cor', 
                     'bum_ham', 'ray_lyn', 'gau_gra']
 '''
-pitcher_data_list = ['sch_ver']
+## Use array with single variable if planning to run for single pitcher
+pitcher_data_list = ['kershaw_actual']
 '''
 # These are the two products to examine
 df_final_list = pd.DataFrame()
 freeze_rates = {}
 
-
 handedness = ['r_', 'l_']
+#The three grouping patterns to organize at bats by
 id_terms = ['_percent_of_ab', '_last_pitch_abs', '_first_pitch_abs']
 results_file_name = 'complete_results.csv'
 
 for pdl_id in pitcher_data_list:
     file_name = 'data/' + pdl_id + '.csv'
     mydataset = pd.read_csv(file_name)
-    '''
-    sep=',', error_bad_lines=False, header=None,
-    names=['pitch_type', 'game_date', 'player_name', 'pitcher', 'events', 'descriptions', 'zone', 
-           'des', 'stand', 'type', 'balls', 'strikes', 'game_year', 'estimated_woba_using_speedangle',
-           'at_bat_number'])
-    '''
     df_all = pd.DataFrame(mydataset)
     df_by_pitcher = df_all.groupby(['pitcher'])
     
@@ -91,6 +87,7 @@ for pdl_id in pitcher_data_list:
         post_cleaning_length = len(df)
         print(pre_cleaning_length - post_cleaning_length, 'records dropped during cleaning')
 
+        ## Group data by handedness and count and create count
         df['ab_count'] = df.apply (lambda row: du.create_count(row), axis=1)
         df_r = df[df['stand'] == 'R']
         df_l = df[df['stand'] == 'L']
@@ -100,10 +97,12 @@ for pdl_id in pitcher_data_list:
         d['r'] = dm.create_dictionary_for_handedness(r_by_count)
         d['l'] = dm.create_dictionary_for_handedness(l_by_count)
         
-        d_count = {}
-        d_count['r'] = dm.create_dictionary_for_handedness_with_hard_count(r_by_count)
-        d_count['l'] = dm.create_dictionary_for_handedness_with_hard_count(l_by_count)
+        #For more in depth look into raw data. Instead of dictionary with percentages, keep raw hard count instead
+        #d_count = {}
+        #d_count['r'] = dm.create_dictionary_for_handedness_with_hard_count(r_by_count)
+        #d_count['l'] = dm.create_dictionary_for_handedness_with_hard_count(l_by_count)
         
+        #Group by at bat to then sort into three patterns
         r_by_at_bat = df_r.groupby(['game_date', 'at_bat_number'])
         l_by_at_bat = df_l.groupby(['game_date', 'at_bat_number'])
         print('finished preparing data for', pitcher_name)
